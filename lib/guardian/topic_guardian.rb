@@ -27,7 +27,7 @@ module TopicGuardian
   end
 
   def can_create_whisper?
-    is_staff? && SiteSetting.enable_whispers?
+    user.has_trust_level?(TrustLevel[3]) && SiteSetting.enable_whispers?
   end
 
   def can_publish_topic?(topic, category)
