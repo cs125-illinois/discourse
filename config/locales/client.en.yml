@@ -2967,6 +2967,7 @@ en:
       full: "Create / Reply / See"
       create_post: "Reply / See"
       readonly: "See"
+      create_only: "Create"
 
     lightbox:
       download: "download"

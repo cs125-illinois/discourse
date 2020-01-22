@@ -46,7 +46,8 @@ const Category = RestModel.extend({
     return [
       PermissionType.create({ id: PermissionType.FULL }),
       PermissionType.create({ id: PermissionType.CREATE_POST }),
-      PermissionType.create({ id: PermissionType.READONLY })
+      PermissionType.create({ id: PermissionType.READONLY }),
+      PermissionType.create({ id: PermissionType.CREATE_ONLY })
     ];
   },
 

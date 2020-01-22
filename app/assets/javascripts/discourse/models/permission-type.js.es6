@@ -16,6 +16,9 @@ const PermissionType = EmberObject.extend({
       case 3:
         key = "readonly";
         break;
+      case 4:
+        key = "create_only";
+        break;
     }
     return I18n.t("permission_types." + key);
   }
@@ -24,5 +27,6 @@ const PermissionType = EmberObject.extend({
 PermissionType.FULL = 1;
 PermissionType.CREATE_POST = 2;
 PermissionType.READONLY = 3;
+PermissionType.CREATE_ONLY = 4;
 
 export default PermissionType;
