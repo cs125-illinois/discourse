@@ -115,11 +115,23 @@ class Category < ActiveRecord::Base
   }
 
   TOPIC_CREATION_PERMISSIONS ||= [:full]
+  TOPIC_CREATE_ONLY_PERMISSIONS ||= [:create_only]
   POST_CREATION_PERMISSIONS  ||= [:create_post, :full]
 
   scope :topic_create_allowed, -> (guardian) do
 
     scoped = scoped_to_permissions(guardian, TOPIC_CREATION_PERMISSIONS)
+
+    if !SiteSetting.allow_uncategorized_topics && !guardian.is_staff?
+      scoped = scoped.where.not(id: SiteSetting.uncategorized_category_id)
+    end
+
+    scoped
+  end
+
+  scope :topic_create_only, -> (guardian) do
+
+    scoped = scoped_to_permissions(guardian, TOPIC_CREATE_ONLY_PERMISSIONS)
 
     if !SiteSetting.allow_uncategorized_topics && !guardian.is_staff?
       scoped = scoped.where.not(id: SiteSetting.uncategorized_category_id)
@@ -466,6 +478,7 @@ class Category < ActiveRecord::Base
 
     everyone = Group::AUTO_GROUPS[:everyone]
     full = CategoryGroup.permission_types[:full]
+    create_only = CategoryGroup.permission_types[:create_only]
 
     mapped = permissions.map do |group, permission|
       group_id = Group.group_id_from_param(group)
@@ -479,7 +492,7 @@ class Category < ActiveRecord::Base
         return [false, []]
       end
 
-      read_restricted = false if group == everyone
+      read_restricted = false if (group == everyone && permission != create_only)
     end
 
     [read_restricted, mapped]

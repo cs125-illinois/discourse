@@ -40,7 +40,8 @@ module TopicGuardian
     (user &&
       user.trust_level >= SiteSetting.min_trust_to_create_topic.to_i &&
       can_create_post?(parent) &&
-      Category.topic_create_allowed(self).limit(1).count == 1)
+      (Category.topic_create_allowed(self).limit(1).count == 1 ||
+       Category.topic_create_only(self).limit(1).count == 1))
   end
 
   def can_create_topic_on_category?(category)
@@ -48,7 +49,15 @@ module TopicGuardian
     category_id = Category === category ? category.id : category
 
     can_create_topic?(nil) &&
-    (!category || Category.topic_create_allowed(self).where(id: category_id).count == 1)
+      (!category || Category.topic_create_allowed(self).where(id: category_id).count == 1 || Category.topic_create_only(self).where(id: category_id).count == 1)
+  end
+
+  def can_only_create_topic_on_category?(category)
+    # allow for category to be a number as well
+    category_id = Category === category ? category.id : category
+
+    can_create_topic?(nil) &&
+      (!category || (Category.topic_create_allowed(self).where(id: category_id).count == 0 && Category.topic_create_only(self).where(id: category_id).count == 1))
   end
 
   def can_move_topic_to_category?(category)
@@ -153,8 +162,12 @@ module TopicGuardian
     end
 
     category = topic.category
-    can_see_category?(category) &&
-      (!category.read_restricted || !is_staged? || topic.user == user)
+    if can_only_create_topic_on_category?(category)
+      can_see_category?(category) && topic.user == user
+    else
+      can_see_category?(category) &&
+        (!category.read_restricted || !is_staged? || topic.user == user)
+    end
   end
 
   def can_get_access_to_topic?(topic)
@@ -163,6 +176,7 @@ module TopicGuardian
 
   def filter_allowed_categories(records)
     unless is_admin?
+
       allowed_ids = allowed_category_ids
       if allowed_ids.length > 0
         records = records.where('topics.category_id IS NULL or topics.category_id IN (?)', allowed_ids)

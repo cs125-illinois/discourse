@@ -96,8 +96,10 @@ class CategoryList
     default_notification_level = CategoryUser.default_notification_level
 
     allowed_topic_create = Set.new(Category.topic_create_allowed(@guardian).pluck(:id))
+    allowed_topic_create_only = Set.new(Category.topic_create_only(@guardian).pluck(:id))
     @categories.each do |category|
       category.notification_level = notification_levels[category.id] || default_notification_level
+      category.permission = CategoryGroup.permission_types[:readonly] if allowed_topic_create_only.include?(category.id)
       category.permission = CategoryGroup.permission_types[:full] if allowed_topic_create.include?(category.id)
       category.has_children = category.subcategories.present?
     end

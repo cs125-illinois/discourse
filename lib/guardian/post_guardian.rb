@@ -111,6 +111,7 @@ module PostGuardian
     (!SpamRule::AutoSilence.prevent_posting?(@user) || (!!parent.try(:private_message?) && parent.allowed_users.include?(@user))) && (
       !parent ||
       !parent.category ||
+      parent.user == user ||
       Category.post_create_allowed(self).where(id: parent.category.id).count == 1
     )
   end
